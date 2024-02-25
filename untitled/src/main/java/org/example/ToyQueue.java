@@ -13,44 +13,48 @@ public class ToyQueue {
         queue.add(new Toy(2, "Робот", 2, 100));
         queue.add(new Toy(3, "кукла", 6, 25));
 
-        try {
-            FileWriter writer = new FileWriter("output.txt");
-            Random random = new Random();
-            Scanner scanner = new Scanner(System.in);
+        try (FileWriter writer = new FileWriter("output.txt");
+             Scanner scanner = new Scanner(System.in)) {
 
             System.out.println("Введите количество попыток игры: ");
             int attempts = scanner.nextInt();
 
-            for (int i = 0; i < 10; i++) {
-                int randomNumber = random.nextInt(attempts);
-                Toy selectedToy = null;
-                if (randomNumber < 2) {
-                    selectedToy = queue.stream().filter(t -> t.id == 1).findFirst().orElse(null);
-                } else if (randomNumber < 4) {
-                    selectedToy = queue.stream().filter(t -> t.id == 2).findFirst().orElse(null);
-                } else {
-                    selectedToy = queue.stream().filter(t -> t.id == 3).findFirst().orElse(null);
-                }
-                if (selectedToy != null) {
-                    writer.write(selectedToy.id + " " + selectedToy.name + "\n");
-                    selectedToy.weight--;
-                    if (selectedToy.weight <= 0) {
-                        queue.remove(selectedToy);
-                    } else {
-                        queue.add(selectedToy);
-                    }
-                    if (random.nextInt(10) > 8) {
-                        System.out.println("Поздравляем! Вы выиграли: " + selectedToy.name + " цена " + selectedToy.price);
-                    } else {
-                        System.out.println("К сожалению, вы проиграли.");
-                    }
-                }
-            }
-            writer.close();
-            scanner.close();
+            playGame(attempts, queue, writer);
+
         } catch (IOException e) {
-            System.out.println("An error occurred");
+            System.out.println("Произошла ошибка при работе с файлом.");
             e.printStackTrace();
+        }
+    }
+
+    private static void playGame(int attempts, PriorityQueue<Toy> queue, FileWriter writer) throws IOException {
+        Random random = new Random();
+        for (int i = 0; i < attempts; i++) {
+            int randomNumber = random.nextInt(100);
+            Toy selectedToy = selectToy(randomNumber, queue);
+            if (selectedToy != null) {
+                writer.write(selectedToy.id + " " + selectedToy.name + "\n");
+                selectedToy.weight--;
+                if (selectedToy.weight <= 0) {
+                    queue.remove(selectedToy);
+                } else {
+                    queue.add(selectedToy);
+                }
+                ToyResultPrinter.printResult(selectedToy);
+            }
+        }
+    }
+
+    private static Toy selectToy(int randomNumber, PriorityQueue<Toy> queue) {
+        if (randomNumber < 10) {
+            return queue.stream().filter(t -> t.id == 1).findFirst().orElse(null);
+        } else if (randomNumber < 16) {
+            return queue.stream().filter(t -> t.id == 2).findFirst().orElse(null);
+        } else if (randomNumber < 24) {
+            return queue.stream().filter(t -> t.id == 3).findFirst().orElse(null);
+        } else {
+            System.out.println("К сожалению, вы проиграли.");
+            return null;
         }
     }
 }
